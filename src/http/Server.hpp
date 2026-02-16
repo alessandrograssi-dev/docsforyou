@@ -1,7 +1,7 @@
-#ifndef SERVER_H
-#define SERVER_H
+#pragma once
 
 #include "HttpConnection.hpp"
+#include "Router.hpp"
 
 struct ServerOptions {
   ServerOptions(int argc, char *argv[]) {
@@ -57,11 +57,7 @@ private:
   net::io_context m_ioc{1};
   tcp::acceptor m_acceptor;
   tcp::socket m_socket;
+  Router m_router;
+  static inline std::atomic<size_t> sm_request_count{0};
   
 };
-
-
-
-
-
-#endif

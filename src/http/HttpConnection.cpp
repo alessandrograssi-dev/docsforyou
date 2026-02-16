@@ -23,74 +23,26 @@ void HttpConnection::read_request() {
       });
 }
 
-void HttpConnection::process_request() {
-  m_response.version(m_request.version());
-  m_response.keep_alive(false);
+void HttpConnection::process_request() {    
+    HttpRequest req;
+    req.method = to_HttpMethod(m_request.method());
+    req.body = beast::buffers_to_string(m_request.body().data());
+    req.target = m_request.target();
 
-  switch(m_request.method())
-  {
-  case http::verb::get:
-      m_response.result(http::status::ok);
-      m_response.set(http::field::server, "Beast");
-      create_response();
-      break;
+    HttpResponse res = m_router.route(req);
+    
+    m_response.version(m_request.version());
+    m_response.keep_alive(false);
+    m_response.result(res.status);
+    m_response.set(http::field::content_type, res.content_type);
+    beast::ostream(m_response.body()) << res.body;
+    m_response.content_length(m_response.body().size());
 
-  default:
-      // We return responses indicating an error if
-      // we do not recognize the request method.
-      m_response.result(http::status::bad_request);
-      m_response.set(http::field::content_type, "text/plain");
-      beast::ostream(m_response.body())
-          << "Invalid request-method '"
-          << std::string(m_request.method_string())
-          << "'";
-      break;
-  }
-
-  write_response();
-}
-
-void HttpConnection::create_response() {
-  if(m_request.target() == "/count")
-  {
-      m_response.set(http::field::content_type, "text/html");
-      beast::ostream(m_response.body())
-          << "<html>\n"
-          <<  "<head><title>Request count</title></head>\n"
-          <<  "<body>\n"
-          <<  "<h1>Request count</h1>\n"
-          <<  "<p>There have been "
-          <<  ++sm_request_count
-          <<  " requests so far.</p>\n"
-          <<  "</body>\n"
-          <<  "</html>\n";
-  }
-  else if(m_request.target() == "/time")
-  {
-      m_response.set(http::field::content_type, "text/html");
-      beast::ostream(m_response.body())
-          <<  "<html>\n"
-          <<  "<head><title>Current time</title></head>\n"
-          <<  "<body>\n"
-          <<  "<h1>Current time</h1>\n"
-          <<  "<p>The current time is "
-          <<  std::time(0)
-          <<  " seconds since the epoch.</p>\n"
-          <<  "</body>\n"
-          <<  "</html>\n";
-  }
-  else
-  {
-      m_response.result(http::status::not_found);
-      m_response.set(http::field::content_type, "text/plain");
-      beast::ostream(m_response.body()) << "File not found\r\n";
-  }
+    write_response();
 }
 
 void HttpConnection::write_response() {
-   auto self = shared_from_this();
-
-  m_response.content_length(m_response.body().size());
+  auto self = shared_from_this();
 
   http::async_write(
       m_socket,
@@ -113,4 +65,28 @@ void HttpConnection::check_deadline() {
               self->m_socket.close(ec);
           }
       });
+}
+
+
+HttpMethod HttpConnection::to_HttpMethod(const http::verb& v) const {
+    switch(v)
+    {
+        case http::verb::get:
+            return HttpMethod::GET;
+        
+        case http::verb::post:
+            return HttpMethod::POST;
+        
+        case http::verb::put:
+            return HttpMethod::PUT;
+
+        case http::verb::patch:
+            return HttpMethod::PATCH;
+
+        case http::verb::delete_:
+            return HttpMethod::DELETE;
+        
+        default:
+            return HttpMethod::UNKNOWN;
+    }
 }

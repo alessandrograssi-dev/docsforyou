@@ -1,24 +1,34 @@
 cmake_minimum_required(VERSION 3.15)
+
+# Set policy for Boost module
+cmake_policy(SET CMP0167 OLD)
+
 project(docsforyou CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Add Boost from vendors directory (header-only)
-set(BOOST_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/vendors/boost)
-include_directories(${BOOST_INCLUDE_DIR})
+# Find system Boost libraries
+find_package(Boost 1.78 REQUIRED COMPONENTS system filesystem)
 
-# Define Boost_LIBRARIES as empty since we're using header-only parts
-set(Boost_LIBRARIES "")
+if(NOT Boost_FOUND)
+    message(FATAL_ERROR "Boost not found. Install with: sudo apt install libboost-all-dev")
+endif()
+
+message(STATUS "Boost version: ${Boost_VERSION}")
+message(STATUS "Boost include dirs: ${Boost_INCLUDE_DIRS}")
+message(STATUS "Boost libraries: ${Boost_LIBRARIES}")
+
+include_directories(${Boost_INCLUDE_DIRS})
 
 # Add subdirectories
 add_subdirectory(src/http)
 
-set (SOURCES
+set(SOURCES
     src/main.cpp
 )
 
-set (LIBRARIES
+set(LIBRARIES
     http_server
 )
 
