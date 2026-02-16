@@ -4,9 +4,9 @@
 
 class CounterService {
 public:
-    size_t increment();
-    size_t value() const;
+  size_t increment();
+  size_t value() const;
 
 private:
-    std::atomic<size_t> m_counter{0};
+  std::atomic<size_t> m_counter{0};
 };

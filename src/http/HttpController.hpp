@@ -1,10 +1,10 @@
 #pragma once
 
-#include <atomic>
-#include "HttpRequest.hpp"
-#include "HttpResponse.hpp"
 #include "../services/CounterService.hpp"
 #include "../services/DocumentService.hpp"
+#include "HttpRequest.hpp"
+#include "HttpResponse.hpp"
+#include <atomic>
 
 class HttpController {
 public:
@@ -16,5 +16,4 @@ public:
 private:
   CounterService& m_counter_service;
   DocumentService& m_document_service;
-
 };

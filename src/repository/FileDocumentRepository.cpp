@@ -1,10 +1,11 @@
 #include "FileDocumentRepository.hpp"
-#include <fstream>
-#include <string>
 #include <exception>
 #include <filesystem>
+#include <fstream>
+#include <string>
 
-void FileDocumentRepository::save(const Document& doc){
+void FileDocumentRepository::save(const Document& doc)
+{
   std::string filename = doc.id + ".txt";
   std::ofstream fs(filename);
   if (!fs.is_open())
@@ -15,26 +16,29 @@ void FileDocumentRepository::save(const Document& doc){
   fs.close();
 }
 
-std::optional<Document> FileDocumentRepository::retrieve(const std::string& id){
+std::optional<Document> FileDocumentRepository::retrieve(const std::string& id)
+{
   std::ifstream fs(id + ".txt");
-    if (!fs) return std::nullopt;
+  if (!fs)
+    return std::nullopt;
 
-    Document doc;
-    doc.id = id;
+  Document doc;
+  doc.id = id;
 
-    std::getline(fs, doc.author);
-    std::string separator;
-    std::getline(fs, separator);
+  std::getline(fs, doc.author);
+  std::string separator;
+  std::getline(fs, separator);
 
-    std::string line;
-    while (std::getline(fs, line)) {
-        doc.content += line + "\n";
-    }
+  std::string line;
+  while (std::getline(fs, line)) {
+    doc.content += line + "\n";
+  }
 
-    return doc;
+  return doc;
 }
 
-bool FileDocumentRepository::remove(const std::string& id){
+bool FileDocumentRepository::remove(const std::string& id)
+{
   std::string filename = id + ".txt";
   return std::filesystem::remove(filename);
 }

@@ -13,5 +13,4 @@ public:
 private:
   DocumentRepository& m_repo;
   uint32_t m_max_id{0};
-
 };

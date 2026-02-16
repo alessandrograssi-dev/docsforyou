@@ -1,15 +1,15 @@
 #pragma once
 
-#include "HttpConnection.hpp"
-#include "Router.hpp"
-#include "HttpController.hpp"
-#include "../services/DocumentService.hpp"
 #include "../repository/FileDocumentRepository.hpp"
+#include "../services/DocumentService.hpp"
+#include "HttpConnection.hpp"
+#include "HttpController.hpp"
+#include "Router.hpp"
 
 struct ServerOptions {
-  ServerOptions(int argc, char *argv[]) {
-    if(argc != 3)
-    {
+  ServerOptions(int argc, char* argv[])
+  {
+    if (argc != 3) {
       print_usage(argv[0]);
       throw std::invalid_argument("Invalid number of arguments");
     }
@@ -17,7 +17,8 @@ struct ServerOptions {
     port = static_cast<unsigned short>(std::atoi(argv[2]));
   }
 
-  ServerOptions(ServerOptions&& other) {
+  ServerOptions(ServerOptions&& other)
+  {
     server_name = std::move(other.server_name);
     address = std::move(other.address);
     port = other.port;
@@ -27,12 +28,13 @@ struct ServerOptions {
     other.port = 0;
   }
 
-
   std::string server_name;
   boost::asio::ip::address address;
   unsigned short port;
+
 private:
-  void print_usage(const char* exe_name) {
+  void print_usage(const char* exe_name)
+  {
     std::cerr << "Usage: " << exe_name << " <address> <port>\n";
     std::cerr << "  For IPv4, try:\n";
     std::cerr << "    receiver 0.0.0.0 80\n";
@@ -41,10 +43,6 @@ private:
   }
 };
 
-
-
-
-
 class Server {
 public:
   Server(ServerOptions&& options);
@@ -52,7 +50,6 @@ public:
   void run();
   void accept();
   void start();
-
 
 private:
   ServerOptions m_options;
@@ -63,6 +60,6 @@ private:
   CounterService m_counter_service;
   FileDocumentRepository m_document_repository;
   DocumentService m_document_service;
-  
+
   HttpController m_controller;
 };

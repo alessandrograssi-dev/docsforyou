@@ -1,8 +1,7 @@
 #pragma once
+#include <map>
 #include <string>
 #include <string_view>
-#include <map>
-
 
 enum class HttpMethod {
   UNKNOWN,
@@ -20,13 +19,13 @@ struct HttpRequest {
   std::map<std::string, std::string> headers;
 };
 
-
-inline HttpMethod parse_HttpMethod(std::string_view method) {
+inline HttpMethod parse_HttpMethod(std::string_view method)
+{
   if (method == "GET")
     return HttpMethod::GET;
   else if (method == "POST")
     return HttpMethod::POST;
-  else if (method == "PUT") 
+  else if (method == "PUT")
     return HttpMethod::PUT;
   else if (method == "PATCH")
     return HttpMethod::PATCH;
