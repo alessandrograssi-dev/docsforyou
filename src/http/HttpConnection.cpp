@@ -29,6 +29,13 @@ void HttpConnection::process_request() {
     req.body = beast::buffers_to_string(m_request.body().data());
     req.target = m_request.target();
 
+    for (auto const& field : m_request.base()) {
+        req.headers.emplace(
+            field.name_string(),
+            field.value()
+        );
+    }
+
     HttpResponse res = m_router.route(req);
     
     m_response.version(m_request.version());

@@ -23,6 +23,8 @@ include_directories(${Boost_INCLUDE_DIRS})
 
 # Add subdirectories
 add_subdirectory(src/http)
+add_subdirectory(src/services)
+add_subdirectory(src/repository)
 
 set(SOURCES
     src/main.cpp
@@ -30,6 +32,8 @@ set(SOURCES
 
 set(LIBRARIES
     http_server
+    services
+    repository
 )
 
 # Main executable

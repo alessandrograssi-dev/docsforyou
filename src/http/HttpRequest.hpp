@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <string_view>
+#include <map>
 
 
 enum class HttpMethod {
@@ -16,6 +17,7 @@ struct HttpRequest {
   HttpMethod method = HttpMethod::UNKNOWN;
   std::string target;
   std::string body;
+  std::map<std::string, std::string> headers;
 };
 
 

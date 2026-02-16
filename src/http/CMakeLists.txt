@@ -4,6 +4,7 @@ set(SOURCES
     Server.cpp
     HttpConnection.cpp
     Router.cpp
+    HttpController.cpp
 )
 
 add_library(http_server STATIC ${SOURCES})

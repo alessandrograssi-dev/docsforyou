@@ -2,6 +2,9 @@
 
 #include "HttpConnection.hpp"
 #include "Router.hpp"
+#include "HttpController.hpp"
+#include "../services/DocumentService.hpp"
+#include "../repository/FileDocumentRepository.hpp"
 
 struct ServerOptions {
   ServerOptions(int argc, char *argv[]) {
@@ -53,11 +56,13 @@ public:
 
 private:
   ServerOptions m_options;
-  size_t m_request_count{0};
   net::io_context m_ioc{1};
   tcp::acceptor m_acceptor;
   tcp::socket m_socket;
   Router m_router;
-  static inline std::atomic<size_t> sm_request_count{0};
+  CounterService m_counter_service;
+  FileDocumentRepository m_document_repository;
+  DocumentService m_document_service;
   
+  HttpController m_controller;
 };
