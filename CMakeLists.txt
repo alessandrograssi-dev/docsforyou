@@ -14,6 +14,14 @@ set(Boost_LIBRARIES "")
 # Add subdirectories
 add_subdirectory(src/http)
 
+set (SOURCES
+    src/main.cpp
+)
+
+set (LIBRARIES
+    http_server
+)
+
 # Main executable
-add_executable(docsforyou src/main.cpp)
-target_link_libraries(docsforyou PRIVATE http_server ${Boost_LIBRARIES})
+add_executable(docsforyou ${SOURCES})
+target_link_libraries(docsforyou PRIVATE ${LIBRARIES} ${Boost_LIBRARIES})
