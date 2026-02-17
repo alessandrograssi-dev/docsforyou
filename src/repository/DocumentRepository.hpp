@@ -1,11 +1,13 @@
 #pragma once
 #include <optional>
 #include <string>
+#include <string_view>
 
 struct Document {
   std::string id;
   std::string author;
   std::string content;
+  static inline constexpr std::string_view extension = ".DFY";
 };
 
 class DocumentRepository {

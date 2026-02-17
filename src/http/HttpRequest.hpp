@@ -1,7 +1,7 @@
 #pragma once
-#include <unordered_map>
 #include <string>
 #include <string_view>
+#include <unordered_map>
 
 enum class HttpMethod {
   UNKNOWN,
@@ -16,7 +16,7 @@ struct HttpRequest {
   HttpMethod method = HttpMethod::UNKNOWN;
   std::string target;
   std::string body;
-  std::unordered_map<std::string, std::string> headers;
+  std::unordered_map<std::string, std::string> path_params;
 };
 
 inline HttpMethod parse_HttpMethod(std::string_view method)

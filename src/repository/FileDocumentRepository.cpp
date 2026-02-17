@@ -6,7 +6,7 @@
 
 void FileDocumentRepository::save(const Document& doc)
 {
-  std::string filename = doc.id + ".txt";
+  std::string filename = doc.id + static_cast<std::string>(Document::extension);
   std::ofstream fs(filename);
   if (!fs.is_open())
     throw std::runtime_error("Could not open file to write");
@@ -18,7 +18,7 @@ void FileDocumentRepository::save(const Document& doc)
 
 std::optional<Document> FileDocumentRepository::retrieve(const std::string& id)
 {
-  std::ifstream fs(id + ".txt");
+  std::ifstream fs(id + static_cast<std::string>(Document::extension));
   if (!fs)
     return std::nullopt;
 
@@ -39,6 +39,6 @@ std::optional<Document> FileDocumentRepository::retrieve(const std::string& id)
 
 bool FileDocumentRepository::remove(const std::string& id)
 {
-  std::string filename = id + ".txt";
+  std::string filename = id + static_cast<std::string>(Document::extension);
   return std::filesystem::remove(filename);
 }

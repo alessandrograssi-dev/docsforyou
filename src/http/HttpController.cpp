@@ -1,8 +1,11 @@
 #include "HttpController.hpp"
 #include <ctime>
-#include <sstream>
-#include <regex>
 #include <iostream>
+#include <nlohmann/json.hpp>
+#include <regex>
+#include <sstream>
+
+using json = nlohmann::json;
 
 HttpController::HttpController(CounterService& counter_service, DocumentService& document_service)
     : m_counter_service(counter_service), m_document_service(document_service)
@@ -43,67 +46,66 @@ HttpResponse HttpController::count(const HttpRequest& req)
   return res;
 }
 
-HttpResponse HttpController::doc_get(const HttpRequest& req) {
+HttpResponse HttpController::doc_get(const HttpRequest& req)
+{
   std::cout << "Getting doc " << req.target << '\n';
-  std::regex id_r = std::regex(R"(^/doc/(\d+)(/?)$)");
-  std::smatch match;
-  if (std::regex_match(req.target, match, id_r)){
-    HttpResponse res;
-    std::string id = match[1].str();
+  try {
+    std::string id = req.path_params.at("id");
     std::optional<Document> doc = m_document_service.get(id);
     if (doc.has_value()) {
+      json j_body = {{"id", id},
+                     {"info", {{"author", doc.value().author}, {"content", doc.value().content}}}};
+      HttpResponse res;
       res.status = 200;
-      res.body += "ID:      " + id + '\n';
-      res.body += "Author:  " + doc.value().author + '\n';
-      res.body += "Content: \n" + doc.value().content + '\n';
-    } else {
-      res = HttpResponse::notFound("Document with ID '" + id + "' not found.\n");
+      res.body = j_body.dump();
+      return res;
     }
-    return res;  
+    else {
+      return HttpResponse::notFound("Document with ID '" + id + "' not found.\n");
+    }
   }
-  return HttpResponse::notFound("Invalid path.\n");
+  catch (...) {
+    return HttpResponse::notFound("Invalid path.\n");
+  }
 }
 
-HttpResponse HttpController::doc_insert(const HttpRequest& req) {
-  HttpResponse res;
-  size_t author_index = req.body.find("author=");
-  size_t content_index = req.body.find("content=");
+HttpResponse HttpController::doc_insert(const HttpRequest& req)
+{
+  try {
+    auto j = json::parse(req.body);
 
-  if (author_index != std::string::npos && content_index != std::string::npos) {
-    size_t pos_separator = req.body.find("&");
-    std::string author;
-    std::string content;
-    if (author_index < content_index) {
-      author = req.body.substr(author_index + 7, pos_separator - 7);
-      content = req.body.substr(content_index + 8, req.body.size() - pos_separator - 8);
-    } else {
-      content = req.body.substr(content_index + 8, pos_separator - 8);
-      author = req.body.substr(author_index + 7, req.body.size() - pos_separator - 7);
-    }
-    std::string id = m_document_service.store(author, content);
+    if (!j.contains("author") || !j.contains("content"))
+      return {400, "Missing fields"};
+
+    std::string author = j["author"];
+    std::string content = j["content"];
+
+    auto id = m_document_service.store(author, content);
+
+    json response = {{"id", id}};
+    HttpResponse res;
     res.status = 201;
-    res.body = "Inserted with ID: " + id + '\n';
+    res.body = response.dump();
+    res.content_type = "application/json";
+    return res;
   }
-  else {
-    res.status = 400;
-    res.body = "Could not insert this record. Make sure you inserted author and content.\n";
+  catch (...) {
+    return {400, "Invalid JSON"};
   }
-  return res;
 }
 
-HttpResponse HttpController::doc_delete(const HttpRequest& req) {
+HttpResponse HttpController::doc_delete(const HttpRequest& req)
+{
   std::cout << "Deleting doc " << req.target << '\n';
   HttpResponse res;
-  std::regex id_r = std::regex(R"(^/doc/(\d+)(/?)$)");
-  std::smatch match;
-  std::regex_match(req.target, match, id_r);
-  std::string id = match[1].str();
-  
+
+  std::string id = req.path_params.at("id");
   if (m_document_service.remove(id)) {
     res.status = 200;
     res.body = "Removed the file with ID " + id + '\n';
-  } else {
+  }
+  else {
     res = HttpResponse::notFound("Document with ID '" + id + "' not found.\n");
   }
-  return res;  
+  return res;
 }

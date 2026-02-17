@@ -2,11 +2,13 @@
 #include <filesystem>
 #include <iostream>
 
-DocumentService::DocumentService(DocumentRepository& repo) : m_repo(repo) {
+DocumentService::DocumentService(DocumentRepository& repo) : m_repo(repo)
+{
   initialize();
 }
 
-void DocumentService::initialize() {
+void DocumentService::initialize()
+{
   const auto dir = std::filesystem::current_path();
 
   for (const auto& entry : std::filesystem::directory_iterator(dir)) {
@@ -15,7 +17,7 @@ void DocumentService::initialize() {
     }
 
     const auto path = entry.path();
-    if (path.extension() != ".txt") {
+    if (path.extension() != Document::extension) {
       continue;
     }
 
@@ -32,7 +34,7 @@ void DocumentService::initialize() {
 std::string DocumentService::store(const std::string& name, const std::string& content)
 {
   Document doc;
-  
+
   std::uint32_t i;
   for (i = 0; i < std::numeric_limits<std::uint32_t>::max(); ++i)
     if (DocumentService::s_used_ids.find(i) == DocumentService::s_used_ids.end()) {
@@ -55,9 +57,10 @@ bool DocumentService::remove(const std::string& id)
 {
   try {
     DocumentService::s_used_ids.erase(std::stoul(id));
-  } catch (const std::exception& e) {
+  }
+  catch (const std::exception& e) {
     return false;
-  } 
+  }
   if (m_repo.remove(id)) {
     DocumentService::s_used_ids.erase(std::stoul(id));
     return true;
