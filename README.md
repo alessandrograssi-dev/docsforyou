@@ -116,6 +116,8 @@ Run container (maps host `8080` to container `8080`):
 make docker-run
 ```
 
+This command mounts `./data` from your host into `/app` in the container, so `*.DFY` files persist across restarts.
+
 Stop container:
 
 ```bash
@@ -133,6 +135,7 @@ Override defaults:
 ```bash
 make docker-build IMAGE_NAME=docsforyou:v1
 make docker-run IMAGE_NAME=docsforyou:v1 CONTAINER_NAME=docsforyou-dev PORT=9090
+make docker-run DATA_DIR=$PWD/my-docs-data
 ```
 
 ## Notes

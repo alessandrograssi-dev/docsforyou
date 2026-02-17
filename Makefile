@@ -2,6 +2,7 @@ IMAGE_NAME ?= docsforyou:latest
 CONTAINER_NAME ?= docsforyou
 PORT ?= 8080
 DOCKER ?= docker
+DATA_DIR ?= $(CURDIR)/docsforyou_data
 
 all: build
 
@@ -29,7 +30,8 @@ docker-build: docker-check
 	$(DOCKER) build -t $(IMAGE_NAME) .
 
 docker-run: docker-check
-	$(DOCKER) run --rm -d --name $(CONTAINER_NAME) -p $(PORT):8080 $(IMAGE_NAME)
+	mkdir -p $(DATA_DIR)
+	$(DOCKER) run --rm -d --name $(CONTAINER_NAME) -p $(PORT):8080 -v $(DATA_DIR):/app $(IMAGE_NAME)
 
 docker-stop:
 	$(DOCKER) stop $(CONTAINER_NAME)
