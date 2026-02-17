@@ -26,26 +26,28 @@ void DocumentService::initialize()
       continue;
     }
 
-    DocumentService::s_used_ids.insert(std::stoul(stem));
+    std::uint32_t id = std::stoul(stem);
+    if (id > m_max_id)
+      m_max_id = id;
+
+    DocumentService::m_used_ids.insert(id);
   }
-  std::cout << "Found " << DocumentService::s_used_ids.size() << " files\n";
+  std::cout << "Found " << DocumentService::m_used_ids.size() << " files\n";
 }
 
 std::string DocumentService::store(const std::string& name, const std::string& content)
 {
   Document doc;
 
-  std::uint32_t i;
-  for (i = 0; i < std::numeric_limits<std::uint32_t>::max(); ++i)
-    if (DocumentService::s_used_ids.find(i) == DocumentService::s_used_ids.end()) {
-      DocumentService::s_used_ids.emplace(i);
-      doc.id = std::to_string(i);
-      doc.author = name;
-      doc.content = content;
-      m_repo.save(doc);
-      return std::to_string(i);
-    }
-  throw std::runtime_error("The number of files the service could handle has been reached!");
+  while (m_used_ids.find(m_max_id) != m_used_ids.end())
+    ++m_max_id;
+
+  doc.id = std::to_string(m_max_id);
+  doc.author = name;
+  doc.content = content;
+  m_repo.save(doc);
+  m_used_ids.emplace(m_max_id);
+  return std::to_string(m_max_id++);
 }
 
 std::optional<Document> DocumentService::get(const std::string& id)
@@ -55,14 +57,15 @@ std::optional<Document> DocumentService::get(const std::string& id)
 
 bool DocumentService::remove(const std::string& id)
 {
+  std::uint32_t numeric_id;
   try {
-    DocumentService::s_used_ids.erase(std::stoul(id));
+    numeric_id = std::stoul(id);
   }
   catch (const std::exception& e) {
     return false;
   }
   if (m_repo.remove(id)) {
-    DocumentService::s_used_ids.erase(std::stoul(id));
+    DocumentService::m_used_ids.erase(numeric_id);
     return true;
   }
   return false;

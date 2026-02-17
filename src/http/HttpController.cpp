@@ -6,6 +6,8 @@
 #include <sstream>
 
 using json = nlohmann::json;
+#define CONTENT_JSON "application/json"
+#define CONTENT_HTML "text/html"
 
 HttpController::HttpController(CounterService& counter_service, DocumentService& document_service)
     : m_counter_service(counter_service), m_document_service(document_service)
@@ -14,9 +16,6 @@ HttpController::HttpController(CounterService& counter_service, DocumentService&
 
 HttpResponse HttpController::time(const HttpRequest& req)
 {
-  HttpResponse res;
-  res.status = 200;
-  res.content_type = "text/html";
   std::ostringstream os;
   os << "<html>\n"
      << "<head><title>Current time</title></head>\n"
@@ -25,15 +24,11 @@ HttpResponse HttpController::time(const HttpRequest& req)
      << "<p>The current time is " << std::time(0) << " seconds since the epoch.</p>\n"
      << "</body>\n"
      << "</html>\n";
-  res.body = os.str();
-  return res;
+  return HttpResponse::ok(os.str(), CONTENT_HTML);
 }
 
 HttpResponse HttpController::count(const HttpRequest& req)
 {
-  HttpResponse res;
-  res.status = 200;
-  res.content_type = "text/html";
   std::ostringstream os;
   os << "<html>\n"
      << "<head><title>Request count</title></head>\n"
@@ -42,8 +37,7 @@ HttpResponse HttpController::count(const HttpRequest& req)
      << "<p>There have been " << m_counter_service.increment() << " requests so far.</p>\n"
      << "</body>\n"
      << "</html>\n";
-  res.body = os.str();
-  return res;
+  return HttpResponse::ok(os.str(), CONTENT_HTML);
 }
 
 HttpResponse HttpController::doc_get(const HttpRequest& req)
@@ -53,12 +47,8 @@ HttpResponse HttpController::doc_get(const HttpRequest& req)
     std::string id = req.path_params.at("id");
     std::optional<Document> doc = m_document_service.get(id);
     if (doc.has_value()) {
-      json j_body = {{"id", id},
-                     {"info", {{"author", doc.value().author}, {"content", doc.value().content}}}};
-      HttpResponse res;
-      res.status = 200;
-      res.body = j_body.dump();
-      return res;
+      json j_body = {{"id", id}, {"author", doc.value().author}, {"content", doc.value().content}};
+      return HttpResponse::ok(j_body.dump(), CONTENT_JSON);
     }
     else {
       return HttpResponse::notFound("Document with ID '" + id + "' not found.\n");
@@ -74,8 +64,9 @@ HttpResponse HttpController::doc_insert(const HttpRequest& req)
   try {
     auto j = json::parse(req.body);
 
-    if (!j.contains("author") || !j.contains("content"))
-      return {400, "Missing fields"};
+    if (!j.contains("author") || !j.contains("content")) {
+      return HttpResponse(400, "missing fields\n");
+    }
 
     std::string author = j["author"];
     std::string content = j["content"];
@@ -83,29 +74,22 @@ HttpResponse HttpController::doc_insert(const HttpRequest& req)
     auto id = m_document_service.store(author, content);
 
     json response = {{"id", id}};
-    HttpResponse res;
-    res.status = 201;
-    res.body = response.dump();
-    res.content_type = "application/json";
-    return res;
+    return HttpResponse(201, response.dump(), CONTENT_JSON);
   }
   catch (...) {
-    return {400, "Invalid JSON"};
+    return HttpResponse(400, "Invalid JSON\n");
   }
 }
 
 HttpResponse HttpController::doc_delete(const HttpRequest& req)
 {
   std::cout << "Deleting doc " << req.target << '\n';
-  HttpResponse res;
 
   std::string id = req.path_params.at("id");
   if (m_document_service.remove(id)) {
-    res.status = 200;
-    res.body = "Removed the file with ID " + id + '\n';
+    return HttpResponse::ok("Removed the file with ID " + id + '\n');
   }
   else {
-    res = HttpResponse::notFound("Document with ID '" + id + "' not found.\n");
+    return HttpResponse::notFound("Document with ID '" + id + "' not found.\n");
   }
-  return res;
 }

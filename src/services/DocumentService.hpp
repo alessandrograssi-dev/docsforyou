@@ -13,7 +13,8 @@ public:
 
 private:
   DocumentRepository& m_repo;
-  std::unordered_set<std::uint32_t> s_used_ids{};
+  std::unordered_set<std::uint32_t> m_used_ids{};
+  std::uint32_t m_max_id{0};
 
   void initialize();
 };

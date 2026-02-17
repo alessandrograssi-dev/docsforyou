@@ -26,7 +26,7 @@ void HttpConnection::process_request()
   req.target = m_request.target();
 
   for (auto const& field : m_request.base()) {
-    req.path_params.emplace(field.name_string(), field.value());
+    req.headers.emplace(field.name_string(), field.value());
   }
 
   HttpResponse res = m_router.route(req);

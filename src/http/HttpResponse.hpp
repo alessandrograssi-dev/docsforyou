@@ -9,13 +9,20 @@ struct HttpResponse {
   std::string body;
   std::unordered_map<std::string, std::string> headers;
 
-  static HttpResponse ok(std::string body)
+  HttpResponse() = default;
+
+  HttpResponse(int status, std::string body, std::string type = "text/plain")
+      : status(status), content_type(std::move(type)), body(std::move(body))
   {
-    return {200, "text/plain", std::move(body)};
+  }
+
+  static HttpResponse ok(std::string body, std::string type = "text/plain")
+  {
+    return HttpResponse(200, body, type);
   }
 
   static HttpResponse notFound(std::string message)
   {
-    return {404, "text/plain", std::move(message)};
+    return HttpResponse(404, message);
   }
 };

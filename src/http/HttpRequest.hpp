@@ -17,6 +17,7 @@ struct HttpRequest {
   std::string target;
   std::string body;
   std::unordered_map<std::string, std::string> path_params;
+  std::unordered_map<std::string, std::string> headers;
 };
 
 inline HttpMethod parse_HttpMethod(std::string_view method)
