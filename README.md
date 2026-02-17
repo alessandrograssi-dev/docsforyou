@@ -1,3 +1,9 @@
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![C++17](https://img.shields.io/badge/C%2B%2B-17-blue.svg)](https://en.cppreference.com/w/cpp/17)
+[![CMake](https://img.shields.io/badge/CMake-3.15+-blue.svg)](https://cmake.org/)
+[![Docker](https://img.shields.io/badge/Docker-Supported-blue.svg)](https://www.docker.com/)
+[![CI](https://github.com/alessandrograssi-dev/docsforyou/actions/workflows/ci.yml/badge.svg)](https://github.com/alessandrograssi-dev/docsforyou/actions/workflows/ci.yml)
+
 # docsforyou
 
 Small C++ HTTP service built with Boost.Beast + CMake.
