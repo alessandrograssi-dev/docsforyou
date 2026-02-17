@@ -1,0 +1,74 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+
+jobs:
+  build:
+    name: Build and smoke test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            cmake \
+            libboost-all-dev \
+            nlohmann-json3-dev
+
+      - name: Configure
+        run: cmake -S . -B build
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Build with Makefile
+        run: make clean && make
+
+      - name: API smoke tests
+        run: |
+          set -euo pipefail
+          ./build/docsforyou 127.0.0.1 8081 &
+          server_pid=$!
+          trap 'kill ${server_pid}' EXIT
+          sleep 1
+
+          curl -fsS http://127.0.0.1:8081/time | grep -q "Current time"
+          curl -fsS http://127.0.0.1:8081/count | grep -q "Request count"
+
+          create_resp=$(curl -fsS -X POST http://127.0.0.1:8081/doc \
+            -H "Content-Type: application/json" \
+            -d '{"author":"ci","content":"hello-from-ci"}')
+
+          echo "$create_resp" | grep -Eq '"id":"[0-9]+"'
+          doc_id=$(echo "$create_resp" | sed -n 's/.*"id":"\([0-9]\+\)".*/\1/p')
+          test -n "$doc_id"
+
+          curl -fsS "http://127.0.0.1:8081/doc/${doc_id}" | grep -q '"author":"ci"'
+          curl -fsS -X DELETE "http://127.0.0.1:8081/doc/${doc_id}" | grep -q "Removed the file"
+
+  docker:
+    name: Docker build and run test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t docsforyou:ci .
+
+      - name: Docker smoke test
+        run: |
+          set -euo pipefail
+          docker run -d --name docsforyou-ci -p 8082:8080 docsforyou:ci
+          trap 'docker rm -f docsforyou-ci' EXIT
+          sleep 1
+          curl -fsS http://127.0.0.1:8082/time | grep -q "Current time"
