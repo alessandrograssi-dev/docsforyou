@@ -37,11 +37,11 @@ void DocumentService::initialize()
 
 std::string DocumentService::store(const std::string& name, const std::string& content)
 {
-  Document doc;
-
+  std::lock_guard<std::mutex> lock(m_mutex);
   while (m_used_ids.find(m_max_id) != m_used_ids.end())
     ++m_max_id;
-
+  
+  Document doc;
   doc.id = std::to_string(m_max_id);
   doc.author = name;
   doc.content = content;
@@ -52,11 +52,13 @@ std::string DocumentService::store(const std::string& name, const std::string& c
 
 std::optional<Document> DocumentService::get(const std::string& id)
 {
+  std::lock_guard<std::mutex> lock(m_mutex);
   return m_repo.retrieve(id);
 }
 
 bool DocumentService::remove(const std::string& id)
 {
+  std::lock_guard<std::mutex> lock(m_mutex);
   std::uint32_t numeric_id;
   try {
     numeric_id = std::stoul(id);

@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 3.15)
 
 # Set policy for Boost module
-cmake_policy(SET CMP0167 OLD)
+if(POLICY CMP0167)
+    cmake_policy(SET CMP0167 OLD)
+endif()
 
 project(docsforyou CXX)
 

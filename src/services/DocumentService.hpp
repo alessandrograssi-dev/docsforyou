@@ -1,6 +1,7 @@
 #pragma once
 #include "../repository/DocumentRepository.hpp"
 #include <cstdint>
+#include <mutex>
 #include <unordered_set>
 
 class DocumentService {
@@ -15,6 +16,7 @@ private:
   DocumentRepository& m_repo;
   std::unordered_set<std::uint32_t> m_used_ids{};
   std::uint32_t m_max_id{0};
+  std::mutex m_mutex;
 
   void initialize();
 };

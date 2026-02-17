@@ -1,0 +1,11 @@
+build/
+.git/
+.gitignore
+.clang-format
+.vscode/
+tmp.txt
+*.o
+*.obj
+*.a
+*.so
+*.out
