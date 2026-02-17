@@ -1,5 +1,5 @@
 #pragma once
-#include <map>
+#include <unordered_map>
 #include <string>
 #include <string_view>
 
@@ -16,7 +16,7 @@ struct HttpRequest {
   HttpMethod method = HttpMethod::UNKNOWN;
   std::string target;
   std::string body;
-  std::map<std::string, std::string> headers;
+  std::unordered_map<std::string, std::string> headers;
 };
 
 inline HttpMethod parse_HttpMethod(std::string_view method)

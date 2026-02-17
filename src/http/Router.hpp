@@ -2,15 +2,16 @@
 #include "HttpRequest.hpp"
 #include "HttpResponse.hpp"
 #include <functional>
-#include <map>
+#include <regex>
+#include <vector>
 
 using Handler = std::function<HttpResponse(const HttpRequest&)>;
 
 class Router {
 public:
-  void add_route(HttpMethod method, std::string path, Handler handler);
+  void add_route(HttpMethod method, std::regex path, Handler handler);
   HttpResponse route(const HttpRequest& req) const;
 
 private:
-  std::map<std::pair<HttpMethod, std::string>, Handler> m_routes;
+  std::vector<std::pair<std::pair<HttpMethod, std::regex>, Handler>> m_routes;
 };

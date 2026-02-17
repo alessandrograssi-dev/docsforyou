@@ -2,6 +2,9 @@
 
 #include "Server.hpp"
 #include <sstream>
+#include <regex>
+
+#include "../utilities/utilities.hpp"
 
 Server::Server(ServerOptions&& options)
     : m_options(std::move(options)),
@@ -9,20 +12,20 @@ Server::Server(ServerOptions&& options)
       m_counter_service(), m_document_repository(), m_document_service(m_document_repository),
       m_controller(m_counter_service, m_document_service)
 {
-  m_router.add_route(HttpMethod::GET, "/count",
+  m_router.add_route(HttpMethod::GET, std::regex(R"(^/count(/?)$)"),
                      [this](const HttpRequest& req) { return m_controller.count(req); });
 
-  m_router.add_route(HttpMethod::GET, "/time",
+  m_router.add_route(HttpMethod::GET, std::regex(R"(^/time(/?)$)"),
                      [this](const HttpRequest& req) { return m_controller.time(req); });
 
-  m_router.add_route(HttpMethod::GET, "/doc",
-                     [this](const HttpRequest& req) { return m_controller.doc(req); });
+  m_router.add_route(HttpMethod::GET, std::regex(R"(^/doc/(\d+)$)"),
+                     [this](const HttpRequest& req) { return m_controller.doc_get(req); });
 
-  m_router.add_route(HttpMethod::POST, "/doc",
-                     [this](const HttpRequest& req) { return m_controller.doc(req); });
+  m_router.add_route(HttpMethod::POST, std::regex(R"(^/doc(/?)$)"),
+                     [this](const HttpRequest& req) { return m_controller.doc_insert(req); });
 
-  m_router.add_route(HttpMethod::DELETE, "/doc",
-                     [this](const HttpRequest& req) { return m_controller.doc(req); });
+  m_router.add_route(HttpMethod::DELETE, std::regex(R"(^/doc/(\d+)$)"),
+                     [this](const HttpRequest& req) { return m_controller.doc_delete(req); });
 }
 
 void Server::run()

@@ -1,6 +1,8 @@
 #include "HttpController.hpp"
 #include <ctime>
 #include <sstream>
+#include <regex>
+#include <iostream>
 
 HttpController::HttpController(CounterService& counter_service, DocumentService& document_service)
     : m_counter_service(counter_service), m_document_service(document_service)
@@ -41,63 +43,67 @@ HttpResponse HttpController::count(const HttpRequest& req)
   return res;
 }
 
-HttpResponse HttpController::doc(const HttpRequest& req)
-{
+HttpResponse HttpController::doc_get(const HttpRequest& req) {
+  std::cout << "Getting doc " << req.target << '\n';
+  std::regex id_r = std::regex(R"(^/doc/(\d+)(/?)$)");
+  std::smatch match;
+  if (std::regex_match(req.target, match, id_r)){
+    HttpResponse res;
+    std::string id = match[1].str();
+    std::optional<Document> doc = m_document_service.get(id);
+    if (doc.has_value()) {
+      res.status = 200;
+      res.body += "ID:      " + id + '\n';
+      res.body += "Author:  " + doc.value().author + '\n';
+      res.body += "Content: \n" + doc.value().content + '\n';
+    } else {
+      res = HttpResponse::notFound("Document with ID '" + id + "' not found.\n");
+    }
+    return res;  
+  }
+  return HttpResponse::notFound("Invalid path.\n");
+}
+
+HttpResponse HttpController::doc_insert(const HttpRequest& req) {
   HttpResponse res;
-  const std::map<std::string, std::string>& h = req.headers;
-  switch (req.method) {
-  case HttpMethod::GET:
-    if (h.find("id") != h.end()) {
-      std::optional<Document> doc = m_document_service.get(h.at("id"));
-      if (doc.has_value()) {
-        res.status = 200;
-        res.body += "ID:      " + h.at("id") + '\n';
-        res.body += "Author:  " + doc.value().author + '\n';
-        res.body += "Content: \n" + doc.value().content + '\n';
-      }
-      else {
-        res.status = 404;
-        res.body = "Document with ID '" + h.at("id") + "' not found.\n";
-      }
-    }
-    else {
-      res.status = 400;
-      res.body = "Missing 'id' header.\n";
-    }
-    break;
-  case HttpMethod::POST:
-    if (h.find("author") != h.end() && h.find("content") != h.end()) {
-      std::string id = m_document_service.store(h.at("author"), h.at("content"));
-      res.status = 202;
-      res.body = "Inserted with ID: " + id + '\n';
-    }
-    else {
-      res.status = 402;
-      res.body = "Could not insert this record. Make sure you inserted author and content.\n";
-    }
-    break;
+  size_t author_index = req.body.find("author=");
+  size_t content_index = req.body.find("content=");
 
-  case HttpMethod::DELETE:
-    if (h.find("id") != h.end()) {
-      if (m_document_service.remove(h.at("id"))) {
-        res.status = 203;
-        res.body = "Removed the file with ID " + h.at("id") + '\n';
-      }
-      else {
-        res.status = 403;
-        res.body = "Could not remove the file with ID " + h.at("id") + '\n';
-      }
+  if (author_index != std::string::npos && content_index != std::string::npos) {
+    size_t pos_separator = req.body.find("&");
+    std::string author;
+    std::string content;
+    if (author_index < content_index) {
+      author = req.body.substr(author_index + 7, pos_separator - 7);
+      content = req.body.substr(content_index + 8, req.body.size() - pos_separator - 8);
+    } else {
+      content = req.body.substr(content_index + 8, pos_separator - 8);
+      author = req.body.substr(author_index + 7, req.body.size() - pos_separator - 7);
     }
-    else {
-      res.status = 400;
-      res.body = "Missing 'id' header\n";
-    }
-    break;
-
-  default:
-    res.status = 404;
-    res.body = "Erroneous /doc endpoint usage\n";
-    break;
+    std::string id = m_document_service.store(author, content);
+    res.status = 201;
+    res.body = "Inserted with ID: " + id + '\n';
+  }
+  else {
+    res.status = 400;
+    res.body = "Could not insert this record. Make sure you inserted author and content.\n";
   }
   return res;
+}
+
+HttpResponse HttpController::doc_delete(const HttpRequest& req) {
+  std::cout << "Deleting doc " << req.target << '\n';
+  HttpResponse res;
+  std::regex id_r = std::regex(R"(^/doc/(\d+)(/?)$)");
+  std::smatch match;
+  std::regex_match(req.target, match, id_r);
+  std::string id = match[1].str();
+  
+  if (m_document_service.remove(id)) {
+    res.status = 200;
+    res.body = "Removed the file with ID " + id + '\n';
+  } else {
+    res = HttpResponse::notFound("Document with ID '" + id + "' not found.\n");
+  }
+  return res;  
 }

@@ -1,6 +1,7 @@
 #pragma once
 #include "../repository/DocumentRepository.hpp"
 #include <cstdint>
+#include <unordered_set>
 
 class DocumentService {
 public:
@@ -12,5 +13,7 @@ public:
 
 private:
   DocumentRepository& m_repo;
-  uint32_t m_max_id{0};
+  std::unordered_set<std::uint32_t> s_used_ids{};
+
+  void initialize();
 };

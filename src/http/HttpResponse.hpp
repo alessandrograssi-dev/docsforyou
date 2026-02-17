@@ -1,13 +1,13 @@
 #pragma once
 #include <cstdint>
-#include <map>
+#include <unordered_map>
 #include <string>
 
 struct HttpResponse {
   int status = 200;
   std::string content_type = "text/plain";
   std::string body;
-  std::map<std::string, std::string> headers;
+  std::unordered_map<std::string, std::string> headers;
 
   static HttpResponse ok(std::string body)
   {
